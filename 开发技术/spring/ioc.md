@@ -47,11 +47,11 @@ AnnotationConfigApplicationContext
 
    ```java
    public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
-   	this();
+       this();
        // 注册
-   	register(componentClasses);
+       register(componentClasses);
        // 刷新
-   	refresh();
+       refresh();
    }
    ```
 
