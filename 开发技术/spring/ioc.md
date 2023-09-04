@@ -315,7 +315,7 @@ AnnotationConfigApplicationContext
    }
    ```
 
-8. 从3进入register。该方法显式将目标类转换为bean定义并注册。
+8. 从3进入register。该方法显式将目标类解析为bean定义并注册。
 
    ```java
    public void register(Class<?>... componentClasses) {
@@ -381,89 +381,192 @@ AnnotationConfigApplicationContext
 
 10. 从3进入refresh。该方法加载或刷新配置的持久化表示，简单说就是执行bean的实例化并刷新上下文。该方法是启动方法，如果失败，则需要销毁所有已经创建的单例bean，即单例bean要么全部实例化，要么全部都没实例化。
 
+   ```java
+   public void refresh() throws BeansException, IllegalStateException {
+   	synchronized (this.startupShutdownMonitor) {
+   		StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
+   
+   		// 使上下文做好刷新准备
+   		// Prepare this context for refreshing.
+   		prepareRefresh();
+   
+   		// 通知子类刷新内置bean工厂
+   		// Tell the subclass to refresh the internal bean factory.
+   		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+   
+   		// 使bean工厂做好在上下文中使用的准备
+   		// Prepare the bean factory for use in this context.
+   		prepareBeanFactory(beanFactory);
+   
+   		try {
+   			// 允许在上下文子类中对bean工厂做后置处理
+   			// Allows post-processing of the bean factory in context subclasses.
+   			postProcessBeanFactory(beanFactory);
+   
+   			StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
+   			// 调用在上下文中被作为bean注册的工厂处理器
+   			// Invoke factory processors registered as beans in the context.
+   			invokeBeanFactoryPostProcessors(beanFactory);
+   
+   			// 注册拦截bean创建的bean处理器
+   			// Register bean processors that intercept bean creation.
+   			registerBeanPostProcessors(beanFactory);
+   			beanPostProcess.end();
+   
+   			// 初始化上下文消息源
+   			// Initialize message source for this context.
+   			initMessageSource();
+   
+   			// 初始化事件组播器
+   			// Initialize event multicaster for this context.
+   			initApplicationEventMulticaster();
+   
+   			// 在特定上下文子类中初始化其他特殊的bean
+   			// Initialize other special beans in specific context subclasses.
+   			onRefresh();
+   
+   			// 检查监听器bean并注册它们
+   			// Check for listener beans and register them.
+   			registerListeners();
+   
+   			// 实例化所有剩下的非懒加载的单例bean
+   			// Instantiate all remaining (non-lazy-init) singletons.
+   			finishBeanFactoryInitialization(beanFactory);
+   
+   			// 发布相应事件
+   			// Last step: publish corresponding event.
+   			finishRefresh();
+   		}
+   
+   		catch (BeansException ex) {
+   			if (logger.isWarnEnabled()) {
+   				logger.warn("Exception encountered during context initialization - " +
+   						"cancelling refresh attempt: " + ex);
+   			}
+   
+   			// 销毁已经创建的单例bean, 避免悬挂资源.
+   			// Destroy already created singletons to avoid dangling resources.
+   			destroyBeans();
+   
+   			// 重置“激活”标志
+   			// Reset 'active' flag.
+   			cancelRefresh(ex);
+   
+   			// Propagate exception to caller.
+   			throw ex;
+   		}
+   
+   		finally {
+   			// Reset common introspection caches in Spring's core, since we
+   			// might not ever need metadata for singleton beans anymore...
+   			resetCommonCaches();
+   			contextRefresh.end();
+   		}
+   	}
+   }
+   ```
+
+11. 返回1，构造函数传入路径，这是另一种容器创建方式。
+
     ```java
-    public void refresh() throws BeansException, IllegalStateException {
-    	synchronized (this.startupShutdownMonitor) {
-    		StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
-    
-    		// 使上下文做好刷新准备
-    		// Prepare this context for refreshing.
-    		prepareRefresh();
-    
-    		// 通知子类刷新内置bean工厂
-    		// Tell the subclass to refresh the internal bean factory.
-    		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-    
-    		// 使bean工厂做好在上下文中使用的准备
-    		// Prepare the bean factory for use in this context.
-    		prepareBeanFactory(beanFactory);
-    
-    		try {
-    			// 允许在上下文子类中对bean工厂做后置处理
-    			// Allows post-processing of the bean factory in context subclasses.
-    			postProcessBeanFactory(beanFactory);
-    
-    			StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
-    			// 调用在上下文中被作为bean注册的工厂处理器
-    			// Invoke factory processors registered as beans in the context.
-    			invokeBeanFactoryPostProcessors(beanFactory);
-    
-    			// 注册拦截bean创建的bean处理器
-    			// Register bean processors that intercept bean creation.
-    			registerBeanPostProcessors(beanFactory);
-    			beanPostProcess.end();
-    
-    			// 初始化上下文消息源
-    			// Initialize message source for this context.
-    			initMessageSource();
-    
-    			// 初始化事件组播器
-    			// Initialize event multicaster for this context.
-    			initApplicationEventMulticaster();
-    
-    			// 在特定上下文子类中初始化其他特殊的bean
-    			// Initialize other special beans in specific context subclasses.
-    			onRefresh();
-    
-    			// 检查监听器bean并注册它们
-    			// Check for listener beans and register them.
-    			registerListeners();
-    
-    			// 实例化所有剩下的非懒加载的单例bean
-    			// Instantiate all remaining (non-lazy-init) singletons.
-    			finishBeanFactoryInitialization(beanFactory);
-    
-    			// 发布相应事件
-    			// Last step: publish corresponding event.
-    			finishRefresh();
-    		}
-    
-    		catch (BeansException ex) {
-    			if (logger.isWarnEnabled()) {
-    				logger.warn("Exception encountered during context initialization - " +
-    						"cancelling refresh attempt: " + ex);
-    			}
-    
-    			// 销毁已经创建的单例bean, 避免悬挂资源.
-    			// Destroy already created singletons to avoid dangling resources.
-    			destroyBeans();
-    
-    			// 重置“激活”标志
-    			// Reset 'active' flag.
-    			cancelRefresh(ex);
-    
-    			// Propagate exception to caller.
-    			throw ex;
-    		}
-    
-    		finally {
-    			// Reset common introspection caches in Spring's core, since we
-    			// might not ever need metadata for singleton beans anymore...
-    			resetCommonCaches();
-    			contextRefresh.end();
-    		}
-    	}
+    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("com.test");
+    ```
+
+12. 进入AnnotationConfigApplicationContext。与之前相似，只是使用了不一样的注册方法。
+
+    ```java
+    public AnnotationConfigApplicationContext(String... basePackages) {
+    	this();
+        // 扫描
+    	scan(basePackages);
+    	refresh();
     }
     ```
 
+13. 进入scan。该方法使用scanner处理目标路径。
+
+    ```java
+    public void scan(String... basePackages) {
+    	Assert.notEmpty(basePackages, "At least one base package must be specified");
+    	StartupStep scanPackages = this.getApplicationStartup().start("spring.context.base-packages.scan")
+    			.tag("packages", () -> Arrays.toString(basePackages));
+    	// 扫描
+        this.scanner.scan(basePackages);
+    	scanPackages.end();
+    }
+    ```
+
+14. 进入scan。
+
+    ```java
+    public int scan(String... basePackages) {
+    	int beanCountAtScanStart = this.registry.getBeanDefinitionCount();
+        
+        // 扫描
+    	doScan(basePackages);
     
+        // 注册注解相关的后置处理器
+    	// Register annotation config processors, if necessary.
+    	if (this.includeAnnotationConfig) {
+    		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
+    	}
+    
+    	return (this.registry.getBeanDefinitionCount() - beanCountAtScanStart);
+    }
+    ```
+
+15. 进入doScan。
+
+    ```java
+    protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
+    	Assert.notEmpty(basePackages, "At least one base package must be specified");
+    	Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
+    	for (String basePackage : basePackages) {
+    		// 扫描路径下的候选类并解析为定义
+    		Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
+    		for (BeanDefinition candidate : candidates) {
+    
+    			// 获取元数据
+    			ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
+    			candidate.setScope(scopeMetadata.getScopeName());
+    			String beanName = this.beanNameGenerator.generateBeanName(candidate, this.registry);
+    
+    			if (candidate instanceof AbstractBeanDefinition) {
+    				postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
+    			}
+    			if (candidate instanceof AnnotatedBeanDefinition) {
+    				AnnotationConfigUtils.processCommonDefinitionAnnotations((AnnotatedBeanDefinition) candidate);
+    			}
+    			if (checkCandidate(beanName, candidate)) {
+    				BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(candidate, beanName);
+    				// 设置作用域代理
+    				definitionHolder =
+    						AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+    				beanDefinitions.add(definitionHolder);
+    				// 注册bean定义
+    				registerBeanDefinition(definitionHolder, this.registry);
+    			}
+    		}
+    	}
+    	return beanDefinitions;
+    }
+    ```
+
+
+
+
+
+核心内容
+
+1. BeanFactory：bena工厂，提供了一种高级配置机制，能够管理任何对象。
+2. ApplicationContext：应用上下文，bean工厂的扩展，提供更多企业支持，支持特定环境的上下文。
+3. Reader、Scanner：用来读取/扫描和注册bean定义。
+4. BeanDefinitionMap：bean定义集合，用于存储bean定义，存在于bean工厂中。
+
+
+
+
+
+流程
+
+![](../../img/AnnotationConfigApplicationContext流程.svg)
