@@ -87,7 +87,7 @@ AnnotationConfigApplicationContext
 
    ```java
    public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
-         BeanDefinitionRegistry registry, @Nullable Object source) {
+           BeanDefinitionRegistry registry, @Nullable Object source) {
    
        // 将注册表解析为DefaultListableBeanFactory
        DefaultListableBeanFactory beanFactory = unwrapDefaultListableBeanFactory(registry);
