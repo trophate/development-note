@@ -1,17 +1,17 @@
 版本：5.3.27
 
-
+<br>
 
 ioc的实现：ioc容器
 
-
+<br>
 
 容器对象：
 
 1. AnnotationConfigApplicationContext：基于注解配置管理bean。
 2. ClassPathXmlApplicationContext：基于xml文件配置管理bean。
 
-
+<br>
 
 AnnotationConfigApplicationContext
 
@@ -164,7 +164,7 @@ AnnotationConfigApplicationContext
    }
    ```
 
-   
+   <br>
 
    进入unwrapDefaultListableBeanFactory。上下文继承的是GenericApplicationContext，所以可知实际使用的bean工厂是GenericApplicationContext中的beanFactory。
 
@@ -188,7 +188,7 @@ AnnotationConfigApplicationContext
    private final DefaultListableBeanFactory beanFactory;
    ```
 
-   
+   <br>
 
    进入registerPostProcessor。可以看到处理器实际是注册到了bean工厂的beanDefinitionMap中。
 
@@ -552,20 +552,14 @@ AnnotationConfigApplicationContext
     }
     ```
 
-
-
-
-
-核心内容
+<br>核心内容
 
 1. BeanFactory：bena工厂，提供了一种高级配置机制，能够管理任何对象。
 2. ApplicationContext：应用上下文，bean工厂的扩展，提供更多企业支持，支持特定环境的上下文。
 3. Reader、Scanner：用来读取/扫描和注册bean定义。
 4. BeanDefinitionMap：bean定义集合，用于存储bean定义，存在于bean工厂中。
 
-
-
-
+<br>
 
 流程
 
