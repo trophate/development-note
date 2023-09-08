@@ -35,7 +35,7 @@ AnnotationConfigApplicationContext
 
    
 
-   它有两个域reader、scanner。scanner能够扫描类路径，识别bean定义，并将其注册。scanner能够识别@Component、@Repository、@Service、@Controller、@ManagedBean（Java EE 6's）、@Named（JSR-330's）注解。reader是scanner的平替，能解析相同的注解，但只能用作显式的注册。
+   它有两个属性reader、scanner。scanner能够扫描类路径，识别bean定义，并将其注册。scanner能够识别@Component、@Repository、@Service、@Controller、@ManagedBean（Java EE 6's）、@Named（JSR-330's）注解。reader是scanner的平替，能解析相同的注解，但只能用作显式的注册。
 
    ```java
    private final AnnotatedBeanDefinitionReader reader;
