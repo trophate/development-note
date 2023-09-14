@@ -385,91 +385,91 @@ AnnotationConfigApplicationContext
 
 10. 从3进入refresh。该方法加载或刷新配置的持久化表示，简单说就是执行bean的实例化并刷新上下文。该方法是启动方法，如果失败，则需要销毁所有已经创建的单例bean，即单例bean要么全部实例化，要么全部都没实例化。
 
-  ```java
-  @Override
-  public void refresh() throws BeansException, IllegalStateException {
-  	synchronized (this.startupShutdownMonitor) {
-  		StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
-  
-  		// 使上下文做好刷新准备
-  		// Prepare this context for refreshing.
-  		prepareRefresh();
-  
-  		// 通知子类刷新内置bean工厂
-  		// Tell the subclass to refresh the internal bean factory.
-  		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-  
-  		// 使bean工厂做好在上下文中使用的准备
-  		// Prepare the bean factory for use in this context.
-  		prepareBeanFactory(beanFactory);
-  
-  		try {
-  			// 允许在上下文子类中对bean工厂做后置处理
-  			// Allows post-processing of the bean factory in context subclasses.
-  			postProcessBeanFactory(beanFactory);
-  
-  			StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
-  			// 调用在上下文中被作为bean被注册的bean工厂后置处理器
-  			// Invoke factory processors registered as beans in the context.
-  			invokeBeanFactoryPostProcessors(beanFactory);
-  
-  			// 注册拦截bean创建的bean后置处理器
-  			// Register bean processors that intercept bean creation.
-  			registerBeanPostProcessors(beanFactory);
-  			beanPostProcess.end();
-  
-  			// 初始化上下文消息源
-  			// Initialize message source for this context.
-  			initMessageSource();
-  
-  			// 初始化事件组播器
-  			// Initialize event multicaster for this context.
-  			initApplicationEventMulticaster();
-  
-  			// 在特定上下文子类中初始化其他特殊的bean
-  			// Initialize other special beans in specific context subclasses.
-  			onRefresh();
-  
-  			// 检查监听器bean并注册它们
-  			// Check for listener beans and register them.
-  			registerListeners();
-  
-  			// 实例化所有剩余的非懒加载的单例bean
-  			// Instantiate all remaining (non-lazy-init) singletons.
-  			finishBeanFactoryInitialization(beanFactory);
-  
-  			// 发布相应事件
-  			// Last step: publish corresponding event.
-  			finishRefresh();
-  		}
-  
-  		catch (BeansException ex) {
-  			if (logger.isWarnEnabled()) {
-  				logger.warn("Exception encountered during context initialization - " +
-  						"cancelling refresh attempt: " + ex);
-  			}
-  
-  			// 销毁已经创建的单例bean, 避免悬挂资源.
-  			// Destroy already created singletons to avoid dangling resources.
-  			destroyBeans();
-  
-  			// 重置“激活”标志
-  			// Reset 'active' flag.
-  			cancelRefresh(ex);
-  
-  			// Propagate exception to caller.
-  			throw ex;
-  		}
-  
-  		finally {
-  			// Reset common introspection caches in Spring's core, since we
-  			// might not ever need metadata for singleton beans anymore...
-  			resetCommonCaches();
-  			contextRefresh.end();
-  		}
-  	}
-  }
-  ```
+   ```java
+   @Override
+   public void refresh() throws BeansException, IllegalStateException {
+   	synchronized (this.startupShutdownMonitor) {
+   		StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
+   
+   		// 使上下文做好刷新准备
+   		// Prepare this context for refreshing.
+   		prepareRefresh();
+   
+   		// 通知子类刷新内置bean工厂
+   		// Tell the subclass to refresh the internal bean factory.
+   		ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+   
+   		// 使bean工厂做好在上下文中使用的准备
+   		// Prepare the bean factory for use in this context.
+   		prepareBeanFactory(beanFactory);
+   
+   		try {
+   			// 允许在上下文子类中对bean工厂做后置处理
+   			// Allows post-processing of the bean factory in context subclasses.
+   			postProcessBeanFactory(beanFactory);
+   
+   			StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
+   			// 调用在上下文中被作为bean被注册的bean工厂后置处理器
+   			// Invoke factory processors registered as beans in the context.
+   			invokeBeanFactoryPostProcessors(beanFactory);
+   
+   			// 注册拦截bean创建的bean后置处理器
+   			// Register bean processors that intercept bean creation.
+   			registerBeanPostProcessors(beanFactory);
+   			beanPostProcess.end();
+   
+   			// 初始化上下文消息源
+   			// Initialize message source for this context.
+   			initMessageSource();
+   
+   			// 初始化事件组播器
+   			// Initialize event multicaster for this context.
+   			initApplicationEventMulticaster();
+   
+   			// 在特定上下文子类中初始化其他特殊的bean
+   			// Initialize other special beans in specific context subclasses.
+   			onRefresh();
+   
+   			// 检查监听器bean并注册它们
+   			// Check for listener beans and register them.
+   			registerListeners();
+   
+   			// 实例化所有剩余的非懒加载的单例bean
+   			// Instantiate all remaining (non-lazy-init) singletons.
+   			finishBeanFactoryInitialization(beanFactory);
+   
+   			// 发布相应事件
+   			// Last step: publish corresponding event.
+   			finishRefresh();
+   		}
+   
+   		catch (BeansException ex) {
+   			if (logger.isWarnEnabled()) {
+   				logger.warn("Exception encountered during context initialization - " +
+   						"cancelling refresh attempt: " + ex);
+   			}
+   
+   			// 销毁已经创建的单例bean, 避免悬挂资源.
+   			// Destroy already created singletons to avoid dangling resources.
+   			destroyBeans();
+   
+   			// 重置“激活”标志
+   			// Reset 'active' flag.
+   			cancelRefresh(ex);
+   
+   			// Propagate exception to caller.
+   			throw ex;
+   		}
+   
+   		finally {
+   			// Reset common introspection caches in Spring's core, since we
+   			// might not ever need metadata for singleton beans anymore...
+   			resetCommonCaches();
+   			contextRefresh.end();
+   		}
+   	}
+   }
+   ```
 
 11. 返回1，构造函数传入包路径，这是另一种容器创建方式。
 
