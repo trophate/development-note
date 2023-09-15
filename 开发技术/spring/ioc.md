@@ -1023,4 +1023,125 @@ AnnotationConfigApplicationContext
 
 流程
 
-![](../../img/AnnotationConfigApplicationContext流程.svg)
+1. 整体
+
+   ![](../../img/AnnotationConfigApplicationContext流程.svg)
+
+2. bean实例化
+
+   ![](../../img/bean实例化流程.svg)
+
+<br>
+
+循环依赖及解决
+
+定义：多个bean之间相互依赖，依赖成环，导致bean创建失败。
+
+设有A、B两个bean，两者相互依赖，现在实例化它们。
+
+```java
+@Component
+public class A {
+    
+	@Autowired
+	private B b;
+}
+
+@Component
+public class B {
+    
+	@Autowired
+	private A a;
+}
+```
+
+创建A实例 → 需要B实例 → 创建B实例 → 需要A实例
+
+spring提供了特定场景下循环依赖的解决方案，方案如下：
+
+bean实例被存储在三级缓存中。
+
+```java
+// DefaultSingletonBeanRegistry
+
+// bean实例列表, 完全走完流程的bean实例. 一级缓存
+/** Cache of singleton objects: bean name to bean instance. */
+private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+
+// 单例工厂, 用于快速创建bean实例, 与bean一一对应. 主要用于快速获取bean实例的代理对象. 三级缓存
+/** Cache of singleton factories: bean name to ObjectFactory. */
+private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
+
+// bean早期实例, 没有走完全部流程的bean实例. 二级缓存
+/** Cache of early singleton objects: bean name to bean instance. */
+private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
+
+// 已经实例化bean列表
+/** Set of registered singletons, containing the bean names in registration order. */
+private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
+```
+
+创建A实例，缓存A的早期实例（不完全实例，没有初始化属性），然后设置属性值。此时需要B实例，但没有B实例，于是创建B实例。在创建B实例时，需要A实例，虽然没有A的完整实例，但缓存了A的早期实例，于是B完成实例化。然后A实例获取到了B实例，完成了A的实例化。
+
+![](../../img/循环依赖解决方案流程.svg)
+
+因为aop等操作，可能导致A早期实例与A最终实例不是一个对象。这这种情况下创建的B实例是不对的，因为B实例关联的是A的早期实例，而需要的是A最终实例。为了解决这个问题，spring缓存了单例工厂。这个工厂的作用是用来获取bean的早期实例，如果bean将被代理，则获取一个bean的早期代理实例。该工厂保证了早期实例始终是“正确的”那个。
+
+过程可以看出能够被解决的循环依赖需要满足依赖注入不能与实例创建形成不可分割操作。如构造器注入就不能解决，setter注入就可以解决。
+
+代码：
+
+1. 从缓存中获取bean实例，从源码12进入getSingleton。
+
+   ```java
+   @Nullable
+   protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+   	// 在singletonObjects中查询(一级缓存)
+   	// Quick check for existing instance without full singleton lock
+   	Object singletonObject = this.singletonObjects.get(beanName);
+   	// 在earlySingletonObjects中查询(二级缓存)
+   	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+   		singletonObject = this.earlySingletonObjects.get(beanName);
+   		// 创建bean早期实例, 并将其存入二级缓存.(三级缓存)
+   		if (singletonObject == null && allowEarlyReference) {
+   			synchronized (this.singletonObjects) {
+   				// Consistent creation of early reference within full singleton lock
+   				singletonObject = this.singletonObjects.get(beanName);
+   				if (singletonObject == null) {
+   					singletonObject = this.earlySingletonObjects.get(beanName);
+   					if (singletonObject == null) {
+   						ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+   						if (singletonFactory != null) {
+   							singletonObject = singletonFactory.getObject();
+   							this.earlySingletonObjects.put(beanName, singletonObject);
+   							this.singletonFactories.remove(beanName);
+   						}
+   					}
+   				}
+   			}
+   		}
+   	}
+   	return singletonObject;
+   }
+   ```
+
+2. bean实例缓存，从源码14进入addSingletonFactory。
+
+   ```java
+   protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
+   	Assert.notNull(singletonFactory, "Singleton factory must not be null");
+   	synchronized (this.singletonObjects) {
+   		if (!this.singletonObjects.containsKey(beanName)) {
+   			// 添加单例工厂
+   			this.singletonFactories.put(beanName, singletonFactory);
+   			// 移除bean早期实例
+   			this.earlySingletonObjects.remove(beanName);
+   			// 注册到已注册实例表中
+   			this.registeredSingletons.add(beanName);
+   		}
+   	}
+   }
+   ```
+
+   
+
