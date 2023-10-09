@@ -2,7 +2,7 @@
 
 <br>
 
-ioc的实现：ioc容器
+IOC的实现：IOC容器
 
 <br>
 
@@ -1016,8 +1016,8 @@ AnnotationConfigApplicationContext
 
 1. BeanFactory：bena工厂，提供了一种高级配置机制，能够管理任何对象。
 2. ApplicationContext：应用上下文，bean工厂的扩展，提供更多企业支持，支持特定环境的上下文。
-3. Reader、Scanner：用来读取/扫描和注册bean定义。
-4. BeanDefinitionMap：bean定义集合，用于存储bean定义，存在于bean工厂中。
+3. reader、scanner：用来读取/扫描和注册bean定义。
+4. beanDefinitionMap：bean定义集合，用于存储bean定义，存在于bean工厂中。
 
 <br>
 
@@ -1057,7 +1057,7 @@ public class B {
 
 创建A实例 → 需要B实例 → 创建B实例 → 需要A实例
 
-spring提供了特定场景下循环依赖的解决方案，方案如下：
+Spring提供了特定场景下循环依赖的解决方案，方案如下：
 
 bean实例被存储在三级缓存中。
 
@@ -1085,7 +1085,7 @@ private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
 ![](../../img/循环依赖解决方案流程.svg)
 
-因为aop等操作，可能导致A早期实例与A最终实例不是一个对象。这这种情况下创建的B实例是不对的，因为B实例关联的是A的早期实例，而需要的是A最终实例。为了解决这个问题，spring缓存了单例工厂。这个工厂的作用是用来获取bean的早期实例，如果bean将被代理，则获取一个bean的早期代理实例。该工厂保证了早期实例始终是“正确的”那个。
+因为AOP等操作，可能导致A早期实例与A最终实例不是一个对象。这这种情况下创建的B实例是不对的，因为B实例关联的是A的早期实例，而需要的是A最终实例。为了解决这个问题，Spring缓存了单例工厂。这个工厂的作用是用来获取bean的早期实例，如果bean将被代理，则获取一个bean的早期代理实例。该工厂保证了早期实例始终是“正确的”那个。
 
 过程可以看出能够被解决的循环依赖需要满足依赖注入不能与实例创建形成不可分割操作。如构造器注入就不能解决，setter注入就可以解决。
 
