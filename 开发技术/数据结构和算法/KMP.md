@@ -20,15 +20,19 @@ KMP过程
 
 设有
 
-![](KMP_1.svg) 
+主串：cbachacefachacys  aStr
+
+子串：achacy  bStr
+
+![](../../img/KMP流程_1.svg) 
 
 开始匹配
 
-![](KMP_2.svg) 
+![](../../img/KMP流程_2.svg) 
 
 此时已经成功匹配了部分字符串，且遇到了不匹配的字符，接下来保持i不变，将j移动到bStr[j-1]在PMT中对应值的位置，即j=2。
 
-![](KMP_3.svg) 
+![](../../img/KMP流程_3.svg) 
 
 然后按上述步骤继续执行匹配直到找到匹配串或者匹配失败。
 
