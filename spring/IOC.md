@@ -29,7 +29,7 @@ AnnotationConfigApplicationContext
    public class AnnotationConfigApplicationContext extends GenericApplicationContext implements AnnotationConfigRegistry
    ```
 
-   [继承图](../../img/AnnotationConfigApplicationContext继承图.png)
+   [继承图](../img/AnnotationConfigApplicationContext继承图.png)
 
    它是BeanFactory、AnnotationConfigRegistry的实现，即它既是一个bean工厂也是一个注册表。注册表提供注册和扫描功能。
 
@@ -1025,11 +1025,11 @@ AnnotationConfigApplicationContext
 
 1. 整体
 
-   ![](../../img/AnnotationConfigApplicationContext流程.svg)
+   ![](../img/AnnotationConfigApplicationContext流程.svg)
 
 2. bean实例化
 
-   ![](../../img/bean实例化流程.svg)
+   ![](../img/bean实例化流程.svg)
 
 <br>
 
@@ -1083,7 +1083,7 @@ private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
 创建A实例，缓存A的早期实例（不完全实例，没有初始化属性），然后设置属性值。此时需要B实例，但没有B实例，于是创建B实例。在创建B实例时，需要A实例，虽然没有A的完整实例，但缓存了A的早期实例，于是B完成实例化。然后A实例获取到了B实例，完成了A的实例化。
 
-![](../../img/循环依赖解决方案流程.svg)
+![](../img/循环依赖解决方案流程.svg)
 
 因为AOP等操作，可能导致A早期实例与A最终实例不是一个对象。这这种情况下创建的B实例是不对的，因为B实例关联的是A的早期实例，而需要的是A最终实例。为了解决这个问题，Spring缓存了单例工厂。这个工厂的作用是用来获取bean的早期实例，如果bean将被代理，则获取一个bean的早期代理实例。该工厂保证了早期实例始终是“正确的”那个。
 
